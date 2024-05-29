@@ -1,0 +1,13 @@
+# Pycache
+__pycache__
+/app/**/__pycache__/
+
+# Migration
+migrations
+
+# Storage
+upload/*
+
+# ENV and Library 
+venv
+.env
