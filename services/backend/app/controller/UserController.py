@@ -22,13 +22,14 @@ def createUser():
         return response.success('', 'Success menambahkan data admin!')
     except Exception as e:
         print(e)
-        return response.error(e, 'Failed!')
+        return response.error(message=str(e))
 
 def login():
-    request_data = LoginStoreRequest(request.form)
+    request_data = LoginStoreRequest()
     
     if not request_data.validate():
-        return response.error(422, 'Invalid credentials!', request_data.errors)
+        # send message data invalid
+        return response.error(422, 'Invalid request form validation', request_data.errors)
 
     try:
         email = request_data.email.data
@@ -52,27 +53,30 @@ def login():
     except Exception as e:
         return response.error(message=str(e))
     
-# def upload():
-#     try:
-#         judul = request.form.get('judul')
+def upload():
+    request_data = (request.form)
+    
+    if not request_data.validate():
+        return response.error(422, 'Invalid credentials!', request_data.errors)
+    
+    try:
+        if 'file' not in request.files:
+            return response.error([], '')
         
-#         if 'file' not in request.files:
-#             return response.badRequest([], 'No file part!')
-        
-#         file = request.files['file']
-#         if file.filename == '':
-#             return response.badRequest([], 'No selected file!')
+        file = request.files['file']
+        if file.filename == '':
+            return response.badRequest([], 'No selected file!')
 
-#         if file and uploadconfig.allowed_file(file.filename):
-#             uid = uuid.uuid4()
-#             filename = secure_filename(file.filename)
-#             renamefile = f'Flask-{str(uid)}{filename}'
-#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], renamefile))
-#             uploads = Gambar(judul=judul, pathname=renamefile)
-#             db.session.add(uploads)
-#             db.session.commit()
-#             return response.success({'pathname': renamefile, 'judul': judul}, 'Success upload file!')
-#         else:
-#             return response.badRequest([], 'File not allowed!')
-#     except Exception as e:
-#         return response.badRequest(e, 'Failed!')
+        # if file and allowed_file(file.filename):
+        #     uid = uuid.uuid4()
+        #     filename = secure_filename(file.filename)
+        #     renamefile = f'Flask-{str(uid)}{filename}'
+        #     file.save(os.path.join(app.config['UPLOAD_FOLDER'], renamefile))
+        #     uploads = Gambar(judul=judul, pathname=renamefile)
+        #     db.session.add(uploads)
+        #     db.session.commit()
+        #     return response.success({'pathname': renamefile, 'judul': judul}, 'Success upload file!')
+        # else:
+        #     return response.badRequest([], 'File not allowed!')
+    except Exception as e:
+        return response.badRequest(e, 'Failed!')

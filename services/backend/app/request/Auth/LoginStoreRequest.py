@@ -1,6 +1,7 @@
-from wtforms import Form, StringField, PasswordField, validators
+from wtforms import StringField, PasswordField, validators
+from flask_wtf import FlaskForm
 
-class LoginStoreRequest(Form):
+class LoginStoreRequest(FlaskForm):
     email = StringField('Email', [validators.DataRequired(message='Email is required')])
     password = PasswordField('Password', [
         validators.Length(min=8, message='Password must be at least 8 characters'),

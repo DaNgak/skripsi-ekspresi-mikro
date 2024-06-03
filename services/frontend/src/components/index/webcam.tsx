@@ -6,7 +6,6 @@ import {
     SelectContent,
     SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
@@ -20,7 +19,7 @@ interface MediaDeviceInfo {
 const WebcamStream: FC = () => {
     const webcamRef = useRef<Webcam>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const [capturing, setCapturing] = useState(false);
+    const [capturing, setCapturing] = useState<boolean>(false);
     const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(
@@ -137,7 +136,9 @@ const WebcamStream: FC = () => {
                     }}
                 />
             </div>
-            Device length {JSON.stringify(devices)}
+            <div className="text-pretty break-words">
+                Device length {JSON.stringify(devices)}{' '}
+            </div>
             {devices.length <= 1 ? (
                 <div className="mx-auto text-red-500">No webcam detected</div>
             ) : (

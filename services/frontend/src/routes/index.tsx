@@ -1,7 +1,8 @@
 import Layout from '@/layout/Guest/Layout';
 import { createFileRoute } from '@tanstack/react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import WebcamStream from '@/components/webcam';
+import WebcamStream from '@/components/index/webcam';
+import InputFile from '@/components/index/input-file';
 
 export const Route = createFileRoute('/')({
     component: () => (
@@ -17,13 +18,12 @@ export const Route = createFileRoute('/')({
                         </TabsTrigger>
                         <TabsTrigger value="input-file">Input File</TabsTrigger>
                     </TabsList>
-                    <TabsContent
-                        value="webcam-stream"
-                        className="flex w-full"
-                    >
+                    <TabsContent value="webcam-stream">
                         <WebcamStream />
                     </TabsContent>
-                    <TabsContent value="input-file">Input File</TabsContent>
+                    <TabsContent value="input-file">
+                        <InputFile />
+                    </TabsContent>
                 </Tabs>
             </div>
         </Layout>
