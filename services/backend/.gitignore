@@ -7,6 +7,8 @@ migrations
 
 # Storage
 assets/datatest/*
+assets/images/output/*
+assets/videos/*
 
 # ENV and Library 
 venv
