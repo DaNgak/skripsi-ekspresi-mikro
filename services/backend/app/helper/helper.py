@@ -1,5 +1,5 @@
 import numpy as np
-import cv2
+import cv2, re
 
 def average(arr):
     unique, counts = np.unique(arr, return_counts=True)
@@ -43,3 +43,6 @@ def convert_video_to_avi(input_path, output_path):
     cap.release()
     if out is not None:
         out.release()
+
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split('(\d+)', s)]
