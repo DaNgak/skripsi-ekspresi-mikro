@@ -42,26 +42,33 @@ def store():
         # Hapus file yang sebelumnya bukan format AVI
         os.remove(file_path_video)
         file_path_video = converted_avi_file_path
+        new_filename_with_extension = f"{new_filename}.avi"
 
     images, error = get_frames_by_input_video(file_path_video, file_path_output_images)
     if error is not None:
         return response.error(message=error)
     
+    # Variabel untuk format response sucess output
+    output_data = []
+
     # --- Setup untuk perhitungan POC dari output images ---
     # load model dan shape predictor untuk deteksi wajah
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_MODEL'], MODAL_PREDICTOR))
+    
     # Inisialisasi variabel untuk menyimpan data dari masing-masing komponen
     components_setup = COMPONENTS_SETUP
     quadran_dimensions = QUADRAN_DIMENSIONS
     frames_data_quadran_column = FRAMES_DATA_QUADRAN_COMPONENTS
-
     frames_data_quadran = []
     frames_data_all_component = []
     frames_data = {component_name: [] for component_name in components_setup}
     total_blocks_components = {component_name: 0 for component_name in components_setup}
     data_blocks_first_image = {component_name: None for component_name in components_setup}
     index = {component_name: 0 for component_name in components_setup}
+
+    for img in images:
+        print(f"img = {img['name']}")
 
     # Hitung total blok dari masing-masing komponen lalu disetup kedalam total_blocks_components
     for component_name, component_info in components_setup.items():
@@ -72,9 +79,15 @@ def store():
         if filename.endswith(".jpg") or filename.endswith(".png"): 
             image = cv2.imread(os.path.join(file_path_output_images, filename))
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
+            
             # Deteksi shape muka didalam grayscale image
             rects = detector(gray)
+            
+            current_image_data = {
+                "name": filename,
+                "url": next((img['url'] for img in images if os.path.splitext(img['name'])[0] == os.path.splitext(filename)[0]), None),
+                "components": {}
+            }
 
             if not index[component_name] == 0:
                 # Buat variabel frames_data_all_component untuk menampung data current frame
@@ -100,7 +113,7 @@ def store():
                         sum_data_by_quadran[column] = {quadrant: 0 for quadrant in quadran_dimensions}
                     
                     # Ambil data blok image dari return fungsi extract_component_by_images
-                    data_blocks_image_current = extract_component_by_images(
+                    data_blocks_image_current, image_url = extract_component_by_images(
                         image=image,
                         shape=shape,
                         frameName=filename.split(".")[0], 
@@ -226,21 +239,22 @@ def store():
                             # Set value sum_data_by_quadran[feature][quadran] ke frame_data_quadran sesuai column_name nya
                             frame_data_quadran[column_name] = sum_data_by_quadran[feature][quadran]
 
-            # --- Setup bagian 4qmv Dataset ---
+                    current_image_data["components"][component_name] = {
+                        "url": image_url
+                    }
+
             if not index[component_name] == 0:
+                # --- Setup bagian 4qmv Dataset ---
                 # Append data frame ke list frames_data_quadran untuk 4qmv
                 frames_data_quadran.append(frame_data_quadran)
-                # print("Frame Quadran", frame_data_quadran)
                 # Tambahkan kolom "Folder Path" dengan nilai folder saat ini
                 frame_data_quadran['Folder Path'] = "data_test"
                 # Tambahkan kolom "Label" dengan nilai label saat ini
                 frame_data_quadran['Label'] = "data_test"
 
-            if not index[component_name] == 0:
                 # --- Setup bagian frames data all component Dataset ---
                 # Append data frame ke list frames_data_quadran untuk 4qmv
                 frames_data_all_component.append(frame_data_all_component)
-                # print("Frame Quadran", frame_data_quadran)
                 # Tambahkan kolom "Folder Path" dengan nilai folder saat ini
                 frame_data_all_component['Folder Path'] = "data_test"
                 # Tambahkan kolom "Label" dengan nilai label saat ini
@@ -249,11 +263,14 @@ def store():
             # Update index per component_name
             index[component_name] += 1
 
+            # Append current_image_data ke output_data
+            output_data.append(current_image_data)
+
     # Construct the URL path to the uploaded video file
     # url_path = url_for('static', filename=new_filename)
     return response.success(200, 'Ok', {
-        "url_path": images,
+        "video": {"url":file_path_video, "name" : new_filename_with_extension},
+        "images": output_data,
     })
     # except Exception as e:
     #     return response.error(message=str(e))
-

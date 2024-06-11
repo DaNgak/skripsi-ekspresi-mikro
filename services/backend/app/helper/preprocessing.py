@@ -73,14 +73,15 @@ def extract_component_by_images(
     selected_component_image_gray = cv2.cvtColor(
         selected_component_image, cv2.COLOR_BGR2GRAY
     )
+    
+    filepath = os.path.join(directoryOutputImage, objectName, f"{frameName:02}.jpg")
 
-    # Save the annotated image
-    cv2.imwrite(
-        os.path.join(directoryOutputImage, objectName, f"img{frameName:02}.jpg"),
-        selected_component_image_gray,
-    )
+    if cv2.imwrite(filepath, selected_component_image_gray):
+        with app.app_context():
+            # Dapatkan URL dari gambar yang disimpan
+            image_url = url_for('static', filename=filepath.replace('\\', '/').replace('assets/', '', 1), _external=True)
 
-    return np.array(selected_component_image_gray)
+    return np.array(selected_component_image_gray), image_url
 
 def get_frames_by_input_video(pathInputVideo, pathOutputImage, framePerSecond=60):
     images = []  # Array untuk menyimpan informasi gambar
