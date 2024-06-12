@@ -32,6 +32,9 @@ COMPONENTS_SETUP = {
 }
 
 BLOCKSIZE = 7
-MODAL_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
+MODEL_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
+MODEL_SVM_EXTRACTION_FEATURE = "svm_model.joblib"
+MODEL_SVM_EXTRACTION_FEATURE = "label_encoder.joblib"
+MODEL_SVM_4QMV = "svm_model_4qmv.joblib"
 QUADRAN_DIMENSIONS = ['Q1', 'Q2', 'Q3', 'Q4']
 FRAMES_DATA_QUADRAN_COMPONENTS = ['sumX', 'sumY', 'Tetha', 'Magnitude', 'JumlahQuadran']

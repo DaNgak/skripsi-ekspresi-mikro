@@ -9,6 +9,7 @@ migrations
 assets/datatest/*
 assets/images/output/*
 assets/videos/*
+assets/models/*
 
 # ENV and Library 
 venv

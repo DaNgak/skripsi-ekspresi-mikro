@@ -1,5 +1,6 @@
 import numpy as np
 import cv2, re
+from collections import Counter
 
 def average(arr):
     unique, counts = np.unique(arr, return_counts=True)
@@ -43,6 +44,43 @@ def convert_video_to_avi(input_path, output_path):
     cap.release()
     if out is not None:
         out.release()
+
+def get_calculate_from_predict(list_decoded_predictions):
+    # Hitung jumlah kemunculan setiap kategori dalam array hasil prediksi
+    prediction_counts = Counter(list_decoded_predictions)
+
+    # Hitung total jumlah prediksi
+    total_predictions = len(list_decoded_predictions)
+
+    # Inisialisasi variabel untuk menyimpan kategori terbanyak dan jumlahnya
+    most_common_category = None
+    most_common_count = 0
+    
+    # Inisialisasi variabel untuk menyimpan hasil prediksi
+    result_prediction = None
+
+    # Buat dictionary untuk menyimpan hasil analisis prediksi
+    list_predictions = {}
+
+    # Lakukan iterasi melalui hasil prediksi
+    for category, count in prediction_counts.items():
+        # Hitung persentase dari setiap kategori
+        percentage = (count / total_predictions) * 100
+
+        # Tambahkan informasi jumlah dan persentase ke dictionary
+        list_predictions[category] = {
+            "count": count,
+            "percentage": format_number_and_round(percentage)
+        }
+
+        # Periksa apakah kategori saat ini memiliki jumlah terbanyak
+        if count > most_common_count:
+            most_common_count = count
+            most_common_category = category
+
+    # Set hasil prediksi sebagai kategori terbanyak
+    result_prediction = most_common_category
+    return result_prediction, list_predictions
 
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split('(\d+)', s)]
