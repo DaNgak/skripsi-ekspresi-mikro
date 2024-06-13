@@ -6,15 +6,13 @@ import { RouterProvider } from '@tanstack/react-router';
 
 function InitProvider() {
     return (
-        <>
+        <QueryClientProvider client={queryClient}>
             <RouterProvider router={router} />
-            <QueryClientProvider client={queryClient}>
-                <ReactQueryDevtools
-                    initialIsOpen={false}
-                    buttonPosition="bottom-left"
-                />
-            </QueryClientProvider>
-        </>
+            <ReactQueryDevtools
+                initialIsOpen={false}
+                buttonPosition="bottom-left"
+            />
+        </QueryClientProvider>
     );
 }
 

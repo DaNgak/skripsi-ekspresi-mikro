@@ -17,7 +17,7 @@ def login():
     else:
         return response.error(405, "Method Not Allowed")
 
-@app.route('/data-model/datatest', methods=['POST'])
+@app.route('/data-model/data-test', methods=['POST'])
 def upload():
     if request.method == 'POST':
         return DataModelController.store()
@@ -32,9 +32,3 @@ def auth():
         return response.success(current_user, "Success!")
     else:
         return response.error(405, "Method Not Allowed")
-    
-@app.route('/images/<name>')
-def display_file(name):
-    # return app.config["UPLOAD_FOLDER"] + '/' + name
-    return os.path.join(app.config["UPLOAD_FOLDER"], name).replace('\\', '/')
-    return send_from_directory(app.config["UPLOAD_FOLDER"], name)

@@ -1,9 +1,9 @@
-export type BaseResponse<T> = {
+export type BaseApiResponse<T> = {
     code: number;
     message?: string | { title: string; description: string };
     data?: T;
     errors?: {
-        [attribute: string]: string[];
+        [attribute: string]: string[] | string;
     };
 };
 
@@ -15,4 +15,4 @@ export type TAlertMessage = {
     description?: string;
 };
 
-export const API_URL = process.env.NEXT_PUBLIC_API_BACKEND;
+export const API_URL = import.meta.env.VITE_PUBLIC_API_BACKEND;

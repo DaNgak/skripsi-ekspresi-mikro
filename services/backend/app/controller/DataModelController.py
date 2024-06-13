@@ -47,7 +47,7 @@ def store():
             file_path_video = converted_avi_file_path
             new_filename_with_extension = f"{new_filename}.avi"
 
-        images, error = get_frames_by_input_video(file_path_video, file_path_output_images)
+        images, error = get_frames_by_input_video(file_path_video, file_path_output_images, 200)
         if error is not None:
             return response.error(message=error)
         
