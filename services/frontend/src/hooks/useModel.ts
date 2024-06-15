@@ -9,36 +9,44 @@ export interface IRequestUploadVideo {
 }
 
 // Interface for Response Data
+export interface IUploadVideoPrediction {
+    name: string;
+    count: number;
+    percentage: number;
+}
+
+export interface IUploadVideoImage {
+    name: string;
+    url: string;
+    prediction: string;
+    components: {
+        [key: string]: { url_source: string; url_result: string };
+    };
+}
+
 export interface IResponseUploadVideo {
     video: {
-        url: string;
         name: string;
+        url: string;
     };
     result: string;
-    list_predictions: {
-        [key: string]: {
-            count: number;
-            percentage: number;
-        };
-    };
-    images: {
-        name: string;
-        url: string;
-        prediction: string;
-        components: {
-            [key: string]: { url: string };
-        };
-    }[];
+    list_predictions: IUploadVideoPrediction[];
+    images: IUploadVideoImage[];
 }
 
 export const useUploadVideo = ({
     onSuccess,
     onError,
+    onSettled,
 }: {
-    onSuccess: (
-        response: AxiosResponse<BaseApiResponse<IResponseUploadVideo>>
+    onSuccess?: (
+        data: AxiosResponse<BaseApiResponse<IResponseUploadVideo>>
     ) => void;
-    onError: (error: AxiosError<BaseApiResponse<null>>) => void;
+    onError?: (error: AxiosError<BaseApiResponse<null>>) => void;
+    onSettled?: (
+        data: AxiosResponse<BaseApiResponse<IResponseUploadVideo>> | undefined,
+        error: AxiosError<BaseApiResponse<null>> | null
+    ) => void;
 }) => {
     return useMutation({
         mutationFn: async (body: IRequestUploadVideo) => {
@@ -59,5 +67,6 @@ export const useUploadVideo = ({
         },
         onSuccess,
         onError,
+        onSettled,
     });
 };

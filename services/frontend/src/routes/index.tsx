@@ -9,7 +9,7 @@ export const Route = createFileRoute('/')({
         <Layout className="items-center justify-center">
             <div className="flex w-full h-full flex-grow">
                 <Tabs
-                    defaultValue="webcam-stream"
+                    defaultValue="input-file"
                     className="w-full"
                 >
                     <TabsList className="grid w-full grid-cols-2 gap-1">

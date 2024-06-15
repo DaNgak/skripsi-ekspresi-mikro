@@ -83,6 +83,7 @@ def store():
                 # Deteksi shape muka didalam grayscale image
                 rects = detector(gray)
                 
+                # Set variabel current_image_data untuk response data dari masing-masing frame
                 current_image_data = {
                     "name": filename,
                     "url": next((img['url'] for img in images if os.path.splitext(img['name'])[0] == os.path.splitext(filename)[0]), None),
@@ -123,6 +124,11 @@ def store():
                             objectDimension=component_info['object_dimension'],
                             directoryOutputImage=file_path_output_images
                         )
+
+                        # Tambahkan url image kedalam current_image_data
+                        current_image_data["components"][component_name] = {
+                            "url_source": image_url
+                        }
                         
                         # Ambil frame pertama dari perulangan lalu simpan di variabel dan skip (lanjutkan ke frame berikut)
                         if data_blocks_first_image[component_name] is None:
@@ -239,10 +245,6 @@ def store():
                                 # Set value sum_data_by_quadran[feature][quadran] ke frame_data_quadran sesuai column_name nya
                                 frame_data_quadran[column_name] = sum_data_by_quadran[feature][quadran]
 
-                        current_image_data["components"][component_name] = {
-                            "url": image_url
-                        }
-
                 if not index[component_name] == 0:
                     # --- Setup bagian 4qmv Dataset ---
                     # Append data frame ke list frames_data_quadran untuk 4qmv
@@ -286,6 +288,14 @@ def store():
         decoded_predictions = label_encoder.inverse_transform(predictions)
         
         result_prediction, list_predictions = get_calculate_from_predict(decoded_predictions)
+        print("decoded_predictions : ", len(decoded_predictions))
+        print("output_data : ", len(output_data))
+
+        for i in range(len(output_data)):
+            if i == 0:
+                output_data[i]['prediction'] = None
+            else:
+                output_data[i]['prediction'] = decoded_predictions[i-1]
 
         # Return response sukses untuk date video dan images, dan prediction
         return response.success(200, 'Ok', {
@@ -293,7 +303,6 @@ def store():
             "result" : result_prediction,
             "list_predictions" : list_predictions,
             "images": output_data,
-            "prediction": decoded_predictions.tolist()
         })
     except Exception as e:
         return response.error(message=str(e))

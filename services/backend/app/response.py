@@ -15,7 +15,7 @@ def error(status_code=500, message=None, errors=[]):
         'errors': errors,
     }), status_code, {'Content-Type': 'application/json'})
 
-# With jsonify (but auto sorting keys) Rosita Ayu
+# With jsonify (but auto sorting keys)
 # def success(status_code=200, message=None, data=None):
 #     return make_response(jsonify({
 #         'code': status_code, 

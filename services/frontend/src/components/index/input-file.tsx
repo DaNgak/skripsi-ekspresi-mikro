@@ -1,9 +1,8 @@
 import { FC, useState, ChangeEvent } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { IResponseUploadVideo, useUploadVideo } from '@/hooks/useModel';
-import { useQueryClient } from '@tanstack/react-query';
-import { BaseApiResponse } from '@/lib/config';
+import { IRequestUploadVideo, useUploadVideo } from '@/hooks/useModel';
+import ResultFetching from './result-fetching';
 
 interface IInputFile {
     file: File;
@@ -12,13 +11,10 @@ interface IInputFile {
 
 const InputFile: FC = () => {
     const [input, setInput] = useState<IInputFile | null>(null);
-    const [response, setResponse] =
-        useState<BaseApiResponse<IResponseUploadVideo> | null>(null);
 
-    const { mutate, isPending } = useUploadVideo({
+    const { mutate, isPending, data } = useUploadVideo({
         onSuccess(response) {
             console.log(response);
-            setResponse(response.data);
         },
         onError(error) {
             if (error.code === 'ERR_NETWORK') {
@@ -40,7 +36,7 @@ const InputFile: FC = () => {
                 filename: file.name,
             };
             setInput(newInput);
-            mutate(newInput);
+            mutate({ file: newInput.file } as IRequestUploadVideo);
         }
     };
 
@@ -59,14 +55,8 @@ const InputFile: FC = () => {
                 ) : (
                     <p>Selected file: {input.filename}</p>
                 )}
-                {isPending ? (
-                    <>Loading</>
-                ) : (
-                    <>
-                        Result <br />
-                        <h4>{JSON.stringify(response)}</h4>
-                    </>
-                )}
+                {isPending && <p>Loading...</p>}
+                {!isPending && data && <ResultFetching response={data.data} />}
             </div>
         </div>
     );
