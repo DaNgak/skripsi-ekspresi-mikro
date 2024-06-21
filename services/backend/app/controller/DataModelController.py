@@ -2,7 +2,7 @@ from app import response, app
 from werkzeug.utils import secure_filename
 import uuid, os, datetime, dlib, cv2
 from app.request.DataModel.DataTestStoreRequest import DataTestStoreRequest
-from app.helper.preprocessing import get_frames_by_input_video, extract_component_by_images
+from app.helper.preprocessing import get_frames_by_input_video, extract_component_by_images, draw_quiver_and_save_plotlib_image, convert_video_to_webm
 from app.helper.helper import convert_video_to_avi, natural_sort_key, get_calculate_from_predict
 from app.helper.poc import POC
 from app.helper.vektor import Vektor
@@ -24,7 +24,7 @@ def store():
         filename = secure_filename(file.filename)
         
         # Mendapatkan ekstensi dari filename dengan split
-        file_extension = filename.split('.')[-1]
+        file_extension = filename.split('.')[-1].lower()
         
         # Misalnya, nama file baru tanpa ekstensi
         new_filename = f'video-{str(uuid.uuid4())}'
@@ -37,15 +37,35 @@ def store():
         # Save video ke folder di lokal
         file.save(file_path_video)
 
-        # Check jika format bukan AVI maka convert ke AVI
-        if file_extension != 'avi':
+        # Lakukan pengecekan berdasarkan file extension
+        if file_extension == 'avi':
+            # Convert AVI ke WEBM untuk respons
+            converted_webm_filename = f"{new_filename}.webm"
+            converted_webm_file_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_VIDEO'], converted_webm_filename)
+            file_path_video_response = convert_video_to_webm(file_path_video, converted_webm_file_path)
+        elif file_extension == 'webm':
+            # Convert WEBM ke AVI untuk pemrosesan
             converted_avi_filename = f"{new_filename}.avi"
             converted_avi_file_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_VIDEO'], converted_avi_filename)
             convert_video_to_avi(file_path_video, converted_avi_file_path)
-            # Hapus file yang sebelumnya bukan format AVI
-            os.remove(file_path_video)
             file_path_video = converted_avi_file_path
             new_filename_with_extension = f"{new_filename}.avi"
+            file_path_video_response = file_path_video
+        else:
+            # Convert input video ke AVI untuk pemrosesan
+            converted_avi_filename = f"{new_filename}.avi"
+            converted_avi_file_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_VIDEO'], converted_avi_filename)
+            convert_video_to_avi(file_path_video, converted_avi_file_path)
+            file_path_video = converted_avi_file_path
+            new_filename_with_extension = f"{new_filename}.avi"
+            
+            # Convert input video ke WEBM untuk respons
+            converted_webm_filename = f"{new_filename}.webm"
+            converted_webm_file_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_VIDEO'], converted_webm_filename)
+            file_path_video_response = convert_video_to_webm(file_path_video, converted_webm_file_path)
+            
+            # Hapus file input yang bukan AVI atau WEBM setelah konversi
+            os.remove(file_path_video)
 
         images, error = get_frames_by_input_video(file_path_video, file_path_output_images, 200)
         if error is not None:
@@ -178,26 +198,23 @@ def store():
                         initQuiv = Vektor(valPOC, BLOCKSIZE)
                         quivData = initQuiv.getVektor() 
 
-                        # plt.quiver(quivData[:, 0], quivData[:, 1], quivData[:, 2], quivData[:, 3], scale=1, scale_units='xy', angles='xy', color="r")    
-
-                        # # num = 0
-                        # for rect_def in valPOC[2]:
-                        #     x, y, width, height = rect_def
-                            
-                        #     rects = patches.Rectangle((x,y), width,height, edgecolor='r', facecolor='none') 
-                        #     plt.gca().add_patch(rects)
-                            
-                        #     # plt.text(x,y,f'({num})', color="blue") 
-                        #     # num += 1
-
-                        # Pemanggilan class untuk mengeluarkan nilai karakteristik vektor
-                        # blok ke, x,y,tetha, magnitude, dan quadran ke
+                        # Pemanggilan class untuk mengeluarkan nilai karakteristik vektor dan quadran
                         initQuadran = Quadran(quivData) 
                         quadran = initQuadran.getQuadran()
 
+                        # Tampilkan gambar grayscale dengan quiver dan simpan plot nya
+                        # plt.quiver(quivData[:, 0], quivData[:, 1], quivData[:, 2], quivData[:, 3], scale=1, scale_units='xy', angles='xy', color="r")    
+                        url_result = draw_quiver_and_save_plotlib_image(
+                            dataBlockImage=data_blocks_image_current, 
+                            quivData=quivData,
+                            frameName=filename.split(".")[0],
+                            objectName=component_info['object_name'], 
+                            directoryOutputImage=file_path_output_images
+                        )
+                        
+                        current_image_data["components"][component_name]["url_result"] = url_result
+
                         # print(tabulate(quadran, headers=['Blok Ke', 'X', 'Y', 'Tetha', 'Magnitude', 'Quadran Ke']))
-                        # plt.axis('on') 
-                        # plt.show() 
 
                         # Update frame_data dengan data quadran
                         for i, quad in enumerate(quadran):
@@ -299,7 +316,10 @@ def store():
 
         # Return response sukses untuk date video dan images, dan prediction
         return response.success(200, 'Ok', {
-            "video": {"url":file_path_video.replace('\\', '/'), "name" : new_filename_with_extension},
+            "video": {
+                "url": file_path_video_response, 
+                "name" : converted_webm_filename if file_extension != 'webm' else new_filename_with_extension
+            },
             "result" : result_prediction,
             "list_predictions" : list_predictions,
             "images": output_data,

@@ -22,7 +22,7 @@ import {
     type CarouselApi,
 } from '@/components/ui/carousel';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Image404 } from '@/components/ui/404Image';
+import { Image404, MemoizedImage } from '@/components/ui/image';
 import { capitalizeAndRemoveUnderscore } from '@/lib/helper';
 import { BaseApiResponse } from '@/lib/config';
 import { IResponseUploadVideo } from '@/hooks/useModel';
@@ -53,15 +53,14 @@ const ResultFetching = ({ response }: IProps) => {
         <>
             {response && response.code === 200 && response.data !== null && (
                 <div className="flex flex-col gap-4 mt-6 pb-10">
-                    {response.data?.video.name}
-                    {response.data?.video.url}
+                    Name: {response.data?.video.name}
                     <AspectRatio
                         ratio={16 / 9}
                         className="w-full max-h-[512px] overflow-hidden rounded-md shadow-lg"
                     >
                         {response.data?.video ? (
                             <ReactPlayer
-                                url="https://dl6.webmfiles.org/big-buck-bunny_trailer.webm"
+                                url={response.data?.video.url}
                                 width={'100%'}
                                 height={'100%'}
                                 controls={true}
@@ -164,7 +163,7 @@ const ResultFetching = ({ response }: IProps) => {
                                                             className="w-full min-w-full overflow-hidden rounded-lg shadow-lg bg-secondary/50"
                                                         >
                                                             {item.url ? (
-                                                                <img
+                                                                <MemoizedImage
                                                                     src={
                                                                         item.url
                                                                     }
@@ -227,7 +226,7 @@ const ResultFetching = ({ response }: IProps) => {
                                                                                         className="w-full overflow-hidden rounded-md shadow-md bg-secondary/50"
                                                                                     >
                                                                                         {component.url_source ? (
-                                                                                            <img
+                                                                                            <MemoizedImage
                                                                                                 src={
                                                                                                     component.url_source
                                                                                                 }
@@ -249,10 +248,10 @@ const ResultFetching = ({ response }: IProps) => {
                                                                                         }
                                                                                         className="w-full overflow-hidden rounded-md shadow-md bg-secondary/50"
                                                                                     >
-                                                                                        {component.url_source ? (
-                                                                                            <img
+                                                                                        {component.url_result ? (
+                                                                                            <MemoizedImage
                                                                                                 src={
-                                                                                                    component.url_source
+                                                                                                    component.url_result
                                                                                                 }
                                                                                                 alt={`Frame ${index + 1}  ${capitalizeAndRemoveUnderscore(
                                                                                                     key
@@ -260,7 +259,7 @@ const ResultFetching = ({ response }: IProps) => {
                                                                                                 className="w-full h-full rounded-md object-contain"
                                                                                             />
                                                                                         ) : (
-                                                                                            <Image404 />
+                                                                                            <Image404 message="No Component Image" />
                                                                                         )}
                                                                                     </AspectRatio>
                                                                                 </TableCell>

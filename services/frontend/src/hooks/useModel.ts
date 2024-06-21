@@ -20,7 +20,7 @@ export interface IUploadVideoImage {
     url: string;
     prediction: string;
     components: {
-        [key: string]: { url_source: string; url_result: string };
+        [key: string]: { url_source: string; url_result?: string };
     };
 }
 

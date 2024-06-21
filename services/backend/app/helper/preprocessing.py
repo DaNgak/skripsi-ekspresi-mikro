@@ -1,9 +1,10 @@
 import cv2, os
 from flask import url_for
 from app import app
-
+import matplotlib.pyplot as plt
 import numpy as np
 from typing import Literal, TypedDict
+import moviepy.editor as mp
 
 class ObjectRectangle(TypedDict):
     x_right: int
@@ -138,3 +139,74 @@ def get_frames_by_input_video(pathInputVideo, pathOutputImage, framePerSecond=60
     vidcap.release()
     
     return images, error
+
+def draw_quiver_and_save_plotlib_image(
+    dataBlockImage, 
+    quivData,
+    frameName,
+    objectName: Literal[
+        "mouth",
+        "eye_left",
+        "eye_right",
+        "eyebrow_left",
+        "eyebrow_right",
+    ], 
+    directoryOutputImage
+):
+    # # Tampilkan gambar grayscale dengan quiver
+    # plt.imshow(np.uint8(dataBlockImage), cmap="gray")
+    # plt.quiver(quivData[:, 0], quivData[:, 1], quivData[:, 2], quivData[:, 3], scale=1, scale_units='xy', angles='xy', color="g")  
+    
+    # # Buat directory jika belum ada
+    # os.makedirs(os.path.join(directoryOutputImage, objectName), exist_ok=True)
+
+    # # Tentukan path untuk menyimpan gambar
+    # filepath = os.path.join(directoryOutputImage, objectName, f"{frameName:02}-quiver.jpg")
+    
+    # # Simpan gambar plot berdasarkan path
+    # plt.savefig(filepath)
+
+    # # Hapus plot untuk menghindari konflik dengan plot berikutnya
+    # plt.clf()
+
+    # Plot the image
+    plt.imshow(np.uint8(dataBlockImage), cmap="gray")
+    
+    # Add the quiver plot
+    plt.quiver(quivData[:, 0], quivData[:, 1], quivData[:, 2], quivData[:, 3], scale=1, scale_units='xy', angles='xy', color="g")
+    
+    # Remove the axes for a cleaner look
+    plt.axis('off')
+    
+    # Set the limits to the size of the dataBlockImage to avoid extra white space
+    plt.xlim(0, dataBlockImage.shape[1])
+    plt.ylim(dataBlockImage.shape[0], 0)  # Invert the y-axis to match image coordinates
+    
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.join(directoryOutputImage, objectName), exist_ok=True)
+    
+    # Build the file path
+    filepath = os.path.join(directoryOutputImage, objectName, f"{frameName}-quiver.jpg")
+    
+    # Save the plot to a file
+    plt.savefig(filepath, bbox_inches='tight', pad_inches=0)
+    
+    # Clear the plot to avoid overlap in future plots
+    plt.clf()
+
+    # Dapatkan URL dari gambar yang disimpan
+    with app.app_context():
+        image_url = url_for('static', filename=filepath.replace('\\', '/').replace('assets/', '', 1), _external=True)
+
+    return image_url
+
+def convert_video_to_webm(input_path, output_path):
+    # Menggunakan moviepy untuk konversi video ke WEBM
+    clip = mp.VideoFileClip(input_path)
+    clip.write_videofile(output_path, codec='libvpx', audio_codec='libvorbis')
+    
+    # Menggunakan url_for untuk membuat URL lengkap
+    with app.app_context():
+        url = url_for('static', filename=output_path.replace('\\', '/').replace('assets/', '', 1), _external=True)
+    
+    return url

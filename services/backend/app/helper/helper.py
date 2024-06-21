@@ -1,6 +1,6 @@
+from collections import Counter
 import numpy as np
 import cv2, re
-from collections import Counter
 
 def average(arr):
     unique, counts = np.unique(arr, return_counts=True)
