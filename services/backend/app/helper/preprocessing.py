@@ -35,6 +35,7 @@ def extract_component_by_images(
     pixelShifting: PixelShifting,
     objectDimension: ObjectDimension,
     directoryOutputImage,
+    withPreview = False
 ):
     # Setup shape part dari parameter objectRectangle
     x_right = shape.part(objectRectangle["x_right"]).x
@@ -63,8 +64,9 @@ def extract_component_by_images(
     width_object = min(objectDimension["width"], image.shape[1] - x_left)
     height_object = min(objectDimension["height"], image.shape[0] - y_highest)
 
-    # Create directory if it doesn't exist
-    os.makedirs(os.path.join(directoryOutputImage, objectName), exist_ok=True)
+    if withPreview:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.join(directoryOutputImage, objectName), exist_ok=True)
 
     selected_component_image = image.copy()
 
@@ -75,9 +77,11 @@ def extract_component_by_images(
         selected_component_image, cv2.COLOR_BGR2GRAY
     )
     
-    filepath = os.path.join(directoryOutputImage, objectName, f"{frameName:02}.jpg")
+    if withPreview:
+        filepath = os.path.join(directoryOutputImage, objectName, f"{frameName:02}.jpg")
 
-    if cv2.imwrite(filepath, selected_component_image_gray):
+    image_url = None
+    if withPreview and cv2.imwrite(filepath, selected_component_image_gray):
         with app.app_context():
             # Dapatkan URL dari gambar yang disimpan
             image_url = url_for('static', filename=filepath.replace('\\', '/').replace('assets/', '', 1), _external=True)

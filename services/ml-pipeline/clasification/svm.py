@@ -1,6 +1,9 @@
 import os
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix
@@ -35,7 +38,8 @@ class SVMClassifier:
         
         # self.y = LabelEncoder().fit_transform(data[self.label_column].values)  # Encode label
         self.y = self.label_encoder.fit_transform(data[self.label_column].values)  # Encode label
-    def split_data(self, test_size=0.2, random_state=0):
+
+    def split_data(self, test_size=0.2, random_state=42):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             self.X, self.y, test_size=test_size, random_state=random_state
         )
@@ -51,7 +55,7 @@ class SVMClassifier:
             # Medium Range: 1, 10, 100
             # High Range: 10, 100, 1000
             param_grid = {
-                'C': [0.01, 0.1, 1, 10],
+                'C': [0.01, 0.1, 1],
                 'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                 'gamma': ['scale', 'auto']
             }
@@ -93,16 +97,35 @@ class SVMClassifier:
             self.model = SVC(C=C, kernel=kernel, gamma=gamma)
             self.model.fit(self.X_train, self.y_train)
         
-    def train_model_with_cross_validation(self, param_grid=None, cv=10):
+    # def train_model_cross_validation(self, param_grid=None, cv=10):
+    #     if param_grid is None:
+    #         param_grid = {
+    #             'C': [0.01, 0.1, 1],
+    #             'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+    #             'gamma': ['scale', 'auto']
+    #         }
+        
+    #     grid_search = GridSearchCV(SVC(), param_grid, cv=cv, scoring='accuracy')
+    #     grid_search.fit(self.X, self.y)  # Menggunakan seluruh dataset
+
+    #     self.model = grid_search.best_estimator_
+        
+    #     print(f"Best parameters found: {grid_search.best_params_}")
+    #     print(f"Best cross-validation accuracy: {grid_search.best_score_}")
+    
+    def train_model_cross_validation(self, param_grid=None, cv=10, random_state=42):
         if param_grid is None:
             param_grid = {
-                'C': [0.01, 0.1, 1, 10],
+                'C': [0.01, 0.1, 1],
                 'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                 'gamma': ['scale', 'auto']
             }
+
+        kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
         
-        grid_search = GridSearchCV(SVC(), param_grid, cv=cv, scoring='accuracy')
-        grid_search.fit(self.X_train, self.y_train)
+        grid_search = GridSearchCV(SVC(), param_grid, cv=kf, scoring='accuracy')
+        grid_search.fit(self.X, self.y)
+
         self.model = grid_search.best_estimator_
         
         print(f"Best parameters found: {grid_search.best_params_}")
@@ -116,6 +139,47 @@ class SVMClassifier:
         print("Accuracy:", accuracy)
         print("\nConfusion Matrix:")
         print(cm)
+
+        # Display the confusion matrix with proper formatting
+        plt.figure(figsize=(10, 7))
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=self.label_encoder.classes_, yticklabels=self.label_encoder.classes_)
+        plt.xlabel("Predicted labels")
+        plt.ylabel("True labels")
+        plt.title("Confusion Matrix")
+        plt.show()
+
+    # def evaluate_model_cross_validation(self, cv=10, random_state=42):
+    #     kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
+    #     accuracies = []
+
+    #     for train_index, test_index in kf.split(self.X):
+    #         X_train, X_test = self.X[train_index], self.X[test_index]
+    #         y_train, y_test = self.y[train_index], self.y[test_index]
+            
+    #         # Feature scaling
+    #         scaler = StandardScaler()
+    #         X_train = scaler.fit_transform(X_train)
+    #         X_test = scaler.transform(X_test)
+            
+    #         # Train the model
+    #         self.model.fit(X_train, y_train)
+            
+    #         # Predict and evaluate
+    #         predictions = self.model.predict(X_test)
+    #         accuracy = accuracy_score(y_test, predictions)
+    #         accuracies.append(accuracy)
+
+    #     average_accuracy = np.mean(accuracies)
+
+    #     print(f"Accuracy with {cv}-Fold Cross Validation: ")
+    #     print(accuracies)
+    #     print(f"Average Accuracy with {cv}-Fold Cross Validation: {average_accuracy:.2f}")
+
+    def evaluate_model_cross_validation(self, cv=10, random_state=42):
+        kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
+        scores = cross_val_score(self.model, self.X, self.y, cv=kf, scoring='accuracy')
+        print(f"Cross-validation accuracy scores: {scores}")
+        print(f"Mean cross-validation accuracy: {scores.mean()}")
 
     def save_model(self, filename='svm_model.joblib', label_encoder_filename='label_encoder.joblib'):
         output_model_path = 'models'
