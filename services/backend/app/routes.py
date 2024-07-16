@@ -1,5 +1,5 @@
 from app import app, response
-from app.controller import UserController, DataModelController
+from app.controller import UserController, DataModelController, TestingModelController
 from flask import request, send_from_directory
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.security import generate_password_hash
@@ -21,6 +21,13 @@ def login():
 def upload():
     if request.method == 'POST':
         return DataModelController.store()
+    else:
+        return response.error(405, "Method Not Allowed")
+    
+@app.route('/testing', methods=['POST'])
+def testing():
+    if request.method == 'POST':
+        return TestingModelController.testing()
     else:
         return response.error(405, "Method Not Allowed")
 

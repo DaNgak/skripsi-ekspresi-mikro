@@ -37,6 +37,7 @@ def extract_component_by_images(
     directoryOutputImage,
     withPreview = False
 ):
+    # withPreview = True
     # Setup shape part dari parameter objectRectangle
     x_right = shape.part(objectRectangle["x_right"]).x
     x_left = shape.part(objectRectangle["x_left"]).x

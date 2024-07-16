@@ -18,7 +18,9 @@ export interface IUploadVideoPrediction {
 export interface IUploadVideoImage {
     name: string;
     url: string;
-    prediction: string;
+    prediction: {
+        [key: string]: string;
+    };
     components: {
         [key: string]: { url_source: string; url_result?: string };
     };
@@ -29,9 +31,16 @@ export interface IResponseUploadVideo {
         name: string;
         url: string;
     };
-    result: string;
-    list_predictions: IUploadVideoPrediction[];
-    images: IUploadVideoImage[];
+    result: {
+        [key: string]: string;
+    };
+    list_predictions: {
+        [key: string]: IUploadVideoPrediction[];
+    };
+    array_predictions?: {
+        [key: string]: string[];
+    };
+    images?: IUploadVideoImage[];
 }
 
 export const useUploadVideo = ({

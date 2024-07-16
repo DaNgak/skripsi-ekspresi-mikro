@@ -4,14 +4,14 @@ from werkzeug.utils import secure_filename
 import uuid, os, datetime, dlib, cv2
 from app.request.DataModel.DataTestStoreRequest import DataTestStoreRequest
 from app.helper.preprocessing import get_frames_by_input_video, extract_component_by_images, draw_quiver_and_save_plotlib_image, convert_video_to_webm
-from app.helper.helper import convert_video_to_avi, natural_sort_key, get_calculate_from_predict
+from app.helper.helper import convert_video_to_avi, natural_sort_key, get_calculate_from_predict, convert_ndarray_to_list
 from app.helper.poc import POC
 from app.helper.vektor import Vektor
 from app.helper.quadran import Quadran
 from app.helper.constant import COMPONENTS_SETUP, FRAMES_DATA_QUADRAN_COMPONENTS, MODEL_PREDICTOR, MODEL_SVM_4QMV, MODEL_SVM_EXTRACTION_FEATURE , QUADRAN_DIMENSIONS, BLOCKSIZE
 import joblib
 import pandas as pd
-
+import numpy as np
 
 def store():
     request_data = DataTestStoreRequest()
@@ -85,7 +85,7 @@ def store():
         with app.app_context():
             file_path_video_response = url_for('static', filename=file_path_video.replace('\\', '/').replace('assets/', '', 1), _external=True)
 
-        images, error = get_frames_by_input_video(file_path_video, file_path_output_images, 60)
+        images, error = get_frames_by_input_video(file_path_video, file_path_output_images, 200)
         if error is not None:
             return response.error(message=error)
         
@@ -120,12 +120,13 @@ def store():
                 # Deteksi shape muka didalam grayscale image
                 rects = detector(gray)
                 
-                # Set variabel current_image_data untuk response data dari masing-masing frame
-                current_image_data = {
-                    "name": filename,
-                    "url": next((img['url'] for img in images if os.path.splitext(img['name'])[0] == os.path.splitext(filename)[0]), None),
-                    "components": {}
-                }
+                if with_preview:
+                    # Set variabel current_image_data untuk response data dari masing-masing frame
+                    current_image_data = {
+                        "name": filename,
+                        "url": next((img['url'] for img in images if os.path.splitext(img['name'])[0] == os.path.splitext(filename)[0]), None),
+                        "components": {}
+                    }
 
                 if not index[component_name] == 0:
                     # Buat variabel frames_data_all_component untuk menampung data current frame
@@ -201,13 +202,14 @@ def store():
                                 directoryOutputImage=file_path_output_images
                             )
                             
-                            current_image_data["components"][component_name]["url_result"] = url_result
+                            if with_preview:
+                                current_image_data["components"][component_name]["url_result"] = url_result
 
                         # print(tabulate(quadran, headers=['Blok Ke', 'X', 'Y', 'Tetha', 'Magnitude', 'Quadran Ke']))
 
                         # Update frame_data dengan data quadran
                         for i, quad in enumerate(quadran):
-                            # --- Setup bagian Nilai fitur Dataset ---
+                            # --- Setup bagian Nilai fitur (semua) Dataset ---
                             # Set data kedalam frame_data_all_component sesuai columnnya
                             frame_data_all_component[f'{component_name}-X{i+1}'] = quad[1]
                             frame_data_all_component[f'{component_name}-Y{i+1}'] = quad[2]
@@ -246,7 +248,7 @@ def store():
                     # Tambahkan kolom "Label" dengan nilai label saat ini
                     frame_data_quadran['Label'] = "data_test"
 
-                    # --- Setup bagian frames data all component Dataset ---
+                    # --- Setup bagian Nilai fitur (semua) Dataset ---
                     # Append data frame ke list frames_data_quadran untuk 4qmv
                     frames_data_all_component.append(frame_data_all_component)
                     # Tambahkan kolom "Folder Path" dengan nilai folder saat ini
@@ -255,85 +257,144 @@ def store():
                     frame_data_all_component['Label'] = "data_test"
 
                 # Update index per component_name
-                index[component_name] += 1
+                index[component_name] += 1  
 
-                # Append current_image_data ke output_data
-                output_data.append(current_image_data)
+                if with_preview:
+                    # Append current_image_data ke output_data
+                    output_data.append(current_image_data)
 
         # Membuat direktori jika belum ada untuk outputnya
-        # output_csv_dir = os.path.join(pathDirectory['result_dataset'], 'csv')
-        # output_excel_dir = os.path.join(pathDirectory['result_dataset'], 'excel')
-        # os.makedirs(output_csv_dir, exist_ok=True)
-        # os.makedirs(output_excel_dir, exist_ok=True)
+        output_csv_dir = os.path.join(os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_DATA'], new_filename))
+        os.makedirs(output_csv_dir, exist_ok=True)
 
-        # Inisialisasi nama file untuk dataset 4qmv
-        # nama_file_csv = f'{output_csv_dir}/4qmv-all-component.csv'
-        # nama_file_xlsx = f'{output_excel_dir}/4qmv-all-component.xlsx'
-
-        # # Hapus file output dari semua tipe dataset baik csv dan xlsx jika ada (4qmv)
-        # if os.path.exists(nama_file_csv):
-        #     os.remove(nama_file_csv)
-        # if os.path.exists(nama_file_xlsx):
-        #     os.remove(nama_file_xlsx)
-
-        # Simpan ke file CSV
-        # df_fitur_all.to_csv(nama_file_csv, index=False, float_format=None)
-
-        # Load model svm_model.joblib disini
-        svm_model_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_MODEL'], 'svm_model.joblib')
-        label_encoder_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_MODEL'], 'label_encoder.joblib')
-        svm_model = joblib.load(svm_model_path)
-        label_encoder = joblib.load(label_encoder_path)
-        
+        # --- Setup bagian Nilai fitur (semua) Dataset ---
         # Initialisasi dataframe dengan pandas
         df_fitur_all = pd.DataFrame(frames_data_all_component)
-        except_feature_columns = ['Frame', 'Folder Path', 'Label']  
+        # Simpan ke file CSV
+        df_fitur_all.to_csv(os.path.join(output_csv_dir, 'nilai-fitur-all-component.csv'), index=False, float_format=None)
+
+        # --- Setup bagian 4qmv Dataset ---
+        # Initialisasi dataframe dengan pandas
+        df_quadran = pd.DataFrame(frames_data_quadran)
+        # Simpan ke file CSV
+        df_quadran.to_csv(os.path.join(output_csv_dir, '4qmv-all-component.csv'), index=False, float_format=None)
         
-        # Hapus kolom except_feature_columns dari df_fitur_all
-        df_fitur_all = df_fitur_all.drop(columns=except_feature_columns)
+        # Base path model joblib
+        base_model_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['UPLOAD_FOLDER_MODEL'])
+        # Kolom yang akan dihapus
+        except_feature_columns = ['Frame', 'Folder Path', 'Label']
 
-        # Lakukan prediksi dengan model yang telah dimuat
-        predictions = svm_model.predict(df_fitur_all.values)
+        # Variabel set model dengan random_sampling dan kfold
+        model_variabel_set = {
+            "random_sampling": {
+                "fitur_all_component": {
+                    "data": df_fitur_all,
+                    "model_path": os.path.join(base_model_path, 'svm_model_random_sampling.joblib'),
+                    "except_feature_columns": except_feature_columns,
+                    "label_encoder_path": os.path.join(base_model_path, 'label_encoder_random_sampling.joblib')
+                },
+                "4qmv_all_component": {
+                    "data": df_quadran,
+                    "model_path": os.path.join(base_model_path, '4qmv_svm_model_random_sampling.joblib'),
+                    "except_feature_columns": except_feature_columns,
+                    "label_encoder_path": os.path.join(base_model_path, '4qmv_label_encoder_random_sampling.joblib')
+                }
+            },
+            "kfold": {
+                "fitur_all_component": {
+                    "data": df_fitur_all,
+                    "model_path": os.path.join(base_model_path, 'svm_model_kfold.joblib'),
+                    "except_feature_columns": except_feature_columns,
+                    "label_encoder_path": os.path.join(base_model_path, 'label_encoder_kfold.joblib')
+                },
+                "4qmv_all_component": {
+                    "data": df_quadran,
+                    "model_path": os.path.join(base_model_path, '4qmv_svm_model_kfold.joblib'),
+                    "except_feature_columns": except_feature_columns,
+                    "label_encoder_path": os.path.join(base_model_path, '4qmv_label_encoder_kfold.joblib')
+                }
+            }
+        }
 
-        # Ubah prediksi numerik menjadi label asli
-        decoded_predictions = label_encoder.inverse_transform(predictions)
-        
-        result_prediction, list_predictions = get_calculate_from_predict(decoded_predictions)
-        print("decoded_predictions : ", len(decoded_predictions))
-        print("output_data : ", len(output_data))
-
-        for i in range(len(output_data)):
-            if i == 0:
-                output_data[i]['prediction'] = None
-            else:
-                output_data[i]['prediction'] = decoded_predictions[i-1]
-
+        # Setup response data prediction untuk di return json
         response_data = {
             "video": {
                 "url": file_path_video_response, 
                 "name": new_filename_with_extension,
             },
-            "result": result_prediction,
-            "list_predictions" : list_predictions,
+            # "result": result_prediction,
+            # "list_predictions" : list_predictions,
+            # "array_predictions": decoded_predictions.tolist()
+        }
+        
+        # Melakukan prediksi untuk setiap variabel set dan komponen
+        predictions_result_all = {}
+        for train_model_key, train_model_data in model_variabel_set.items():
+            predictions_result_all[train_model_key] = {}
+            for metode_key, metode_data in train_model_data.items():
+                df = metode_data['data']
+                model_path = metode_data['model_path']
+                except_columns = metode_data['except_feature_columns']
+                label_encoder_path = metode_data['label_encoder_path']
+                
+                # Hapus kolom yang tidak diperlukan
+                df = df.drop(columns=except_columns)
+                
+                # Load model dan label encoder
+                svm_model = joblib.load(model_path)
+                label_encoder = joblib.load(label_encoder_path)
+                
+                # Lakukan prediksi dan decoded prediksi
+                predictions = svm_model.predict(df.values)
+                decoded_predictions = label_encoder.inverse_transform(predictions)
+                
+                # Dapatkan hasil kalkulasi dari prediksi
+                result_prediction, list_predictions = get_calculate_from_predict(decoded_predictions)
+                
+                # Simpan hasil dalam predictions_result_all
+                predictions_result_all[train_model_key][metode_key] = {
+                    "decoded_predictions": decoded_predictions,
+                    "result_prediction": result_prediction,
+                    "list_predictions": list_predictions,
+                }
+
+        if with_preview:
+            # Mengisi output_data dengan prediksi yang sesuai
+            for i in range(len(output_data)):
+                if i == 0:
+                    output_data[i]['prediction'] = None
+                else:
+                    prediction_entry = {}
+                    for train_model_key in model_variabel_set.keys():
+                        for metode_key in model_variabel_set[train_model_key].keys():
+                            prediction_entry[f"{metode_key}_with_{train_model_key}"] = predictions_result_all[train_model_key][metode_key]['decoded_predictions'][i-1]
+                    output_data[i]['prediction'] = prediction_entry
+
+        # Menyiapkan response_data dengan array_predictions, result, dan list_predictions
+        array_predictions = {}
+        result_predictions = {}
+        list_predictions_all = {}
+        for train_model_key, components in model_variabel_set.items():
+            for metode_key in components.keys():
+                key_name = f"{metode_key}_with_{train_model_key}"
+                # Konversi ndarray menjadi list
+                array_predictions[key_name] = predictions_result_all[train_model_key][metode_key]['decoded_predictions'].tolist()
+                result_predictions[key_name] = predictions_result_all[train_model_key][metode_key]['result_prediction']
+                list_predictions_all[key_name] = predictions_result_all[train_model_key][metode_key]['list_predictions']
+
+        response_data = {
+            "array_predictions": array_predictions,
+            "result": result_predictions,
+            "list_predictions": list_predictions_all
         }
 
         if with_preview:
-            response_data["images"] = output_data.tolist()
-        else:
-            response_data["array_predictions"] = decoded_predictions.tolist()
-
-        # Return response sukses untuk date video dan images, dan prediction
-        # return response.success(200, 'Ok', {
-        #     "video": {
-        #         "url": file_path_video_response, 
-        #         "name": new_filename_with_extension,
-        #         # "name" : converted_webm_filename if file_extension != 'webm' else new_filename_with_extension
-        #     },
-        #     "result" : result_prediction,
-        #     "list_predictions" : list_predictions,
-        #     "array_predictions": decoded_predictions,
-        #     "images": output_data,
-        # })
+            response_data["images"] = [item.tolist() if isinstance(item, np.ndarray) else item for item in output_data]
+        
+        # print(type(array_predictions))
+        # print(type(result_predictions))
+        # print(type(list_predictions_all))
+        # print(type(output_data))
         return response.success(200, 'Ok', response_data)
     except Exception as e:
         return response.error(message=str(e))

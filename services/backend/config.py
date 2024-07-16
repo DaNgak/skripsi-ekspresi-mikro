@@ -54,5 +54,6 @@ class Config:
     UPLOAD_FOLDER_VIDEO = "videos"
     UPLOAD_FOLDER_IMAGE = "images"
     UPLOAD_FOLDER_MODEL = "models"
+    UPLOAD_FOLDER_DATA = "data"
     MAX_VIDEO_CONTENT_LENGTH = 10 * 1024 * 1024
     WTF_CSRF_ENABLED=False

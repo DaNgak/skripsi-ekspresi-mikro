@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold
+from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, GridSearchCV, KFold
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix
@@ -22,6 +22,7 @@ class SVMClassifier:
         self.y_train = None
         self.y_test = None
         self.model = None
+        self.kf = None 
         self.label_encoder = LabelEncoder()
 
     def load_data(self):
@@ -121,9 +122,9 @@ class SVMClassifier:
                 'gamma': ['scale', 'auto']
             }
 
-        kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
+        self.kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
         
-        grid_search = GridSearchCV(SVC(), param_grid, cv=kf, scoring='accuracy')
+        grid_search = GridSearchCV(SVC(), param_grid, cv=self.kf, scoring='accuracy')
         grid_search.fit(self.X, self.y)
 
         self.model = grid_search.best_estimator_
@@ -175,11 +176,28 @@ class SVMClassifier:
     #     print(accuracies)
     #     print(f"Average Accuracy with {cv}-Fold Cross Validation: {average_accuracy:.2f}")
 
-    def evaluate_model_cross_validation(self, cv=10, random_state=42):
-        kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
-        scores = cross_val_score(self.model, self.X, self.y, cv=kf, scoring='accuracy')
-        print(f"Cross-validation accuracy scores: {scores}")
-        print(f"Mean cross-validation accuracy: {scores.mean()}")
+    def evaluate_model_cross_validation(self):
+        # kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
+        # scores = cross_val_score(self.model, self.X, self.y, cv=kf, scoring='accuracy')
+        # print(f"Cross-validation accuracy scores: {scores}")
+        # print(f"Mean cross-validation accuracy: {scores.mean()}")
+
+        predictions = cross_val_predict(self.model, self.X, self.y, cv=self.kf)
+        
+        accuracy = accuracy_score(self.y, predictions)
+        cm = confusion_matrix(self.y, predictions)
+        
+        print("Cross-validated Accuracy:", accuracy)
+        print("\nConfusion Matrix:")
+        print(cm)
+
+        # Display the confusion matrix with proper formatting
+        plt.figure(figsize=(10, 7))
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=self.label_encoder.classes_, yticklabels=self.label_encoder.classes_)
+        plt.xlabel("Predicted labels")
+        plt.ylabel("True labels")
+        plt.title("Confusion Matrix")
+        plt.show()
 
     def save_model(self, filename='svm_model.joblib', label_encoder_filename='label_encoder.joblib'):
         output_model_path = 'models'

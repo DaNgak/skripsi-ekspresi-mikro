@@ -5,4 +5,8 @@ const capitalizeAndRemoveUnderscore = (str: string) => {
         .join(' ');
 };
 
-export { capitalizeAndRemoveUnderscore };
+const getFormatFile = (videoUrl: string) => {
+    return videoUrl.split('.').pop()?.toLowerCase() || '';
+};
+
+export { capitalizeAndRemoveUnderscore, getFormatFile };

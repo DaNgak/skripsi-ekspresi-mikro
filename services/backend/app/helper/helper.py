@@ -83,3 +83,17 @@ def get_calculate_from_predict(list_decoded_predictions):
 
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split('(\d+)', s)]
+
+def convert_ndarray_to_list(obj):
+    if isinstance(obj, np.ndarray):
+        print("satu")
+        return obj.tolist()
+    elif isinstance(obj, list):
+        print("dua")
+        return [convert_ndarray_to_list(item) for item in obj]
+    elif isinstance(obj, dict):
+        print("tiga")
+        return {key: convert_ndarray_to_list(value) for key, value in obj.items()}
+    else:
+        print("empat")
+        return obj

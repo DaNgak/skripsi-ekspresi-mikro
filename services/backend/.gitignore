@@ -6,10 +6,11 @@ __pycache__
 migrations
 
 # Storage
-assets/datatest/*
+assets/data/*
 assets/images/output/*
 assets/videos/*
 assets/models/*
+assets/data-test/*
 
 # ENV and Library 
 venv
