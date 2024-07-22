@@ -87,6 +87,34 @@ const ResultFetching = ({ response }: IProps) => {
                             </AlertDescription>
                         </Alert>
                     )}
+                    <div className="flex flex-col gap-2">
+                        <h5>Data Ekstraksi Fitur dan Seleksi Fitur : </h5>
+                        {response.data?.csv_file ? (
+                            <div className="flex flex-row gap-4">
+                                {Object.entries(response.data.csv_file).map(
+                                    ([key, value]) => (
+                                        <a
+                                            key={key}
+                                            href={value}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-5 py-3 bg-primary text-white rounded-lg shadow-lg"
+                                        >
+                                            {capitalizeAndRemoveUnderscore(key)}
+                                            .csv
+                                        </a>
+                                    )
+                                )}
+                            </div>
+                        ) : (
+                            <Alert>
+                                <AlertTitle>Not Found</AlertTitle>
+                                <AlertDescription>
+                                    Tidak ada response untuk file csv
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
                     <div className="text-sm font-normal flex flex-col gap-1">
                         <h5>Hasil Prediksi : </h5>
                         {response.data?.result && (

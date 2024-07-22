@@ -31,6 +31,9 @@ export interface IResponseUploadVideo {
         name: string;
         url: string;
     };
+    csv_file: {
+        [key: string]: string;
+    };
     result: {
         [key: string]: string;
     };

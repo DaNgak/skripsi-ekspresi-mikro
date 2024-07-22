@@ -109,6 +109,9 @@ def get_frames_by_input_video(pathInputVideo, pathOutputImage, framePerSecond=60
         os.makedirs(pathOutputImage)
 
     count = 1
+    # Ambil frame rate dari video
+    # framePerSecond = 200
+    framePerSecond = vidcap.get(cv2.CAP_PROP_FPS)
 
     while True:
         # Read setiap frame dari video (setiap looping framenya bertambah 1 sampai jumlah frame video habis baru success bernilai false)
