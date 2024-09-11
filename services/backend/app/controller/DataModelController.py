@@ -259,7 +259,7 @@ def store():
             # Update index per component_name
             index[component_name] += 1  
 
-            if with_preview:
+            if with_preview:    
                 # Append current_image_data ke output_data
                 output_data.append(current_image_data)
 
@@ -273,12 +273,16 @@ def store():
     # Simpan ke file CSV
     nilai_fitur_all_path = os.path.join(output_csv_dir, 'nilai-fitur-all-component.csv')
     df_fitur_all.to_csv(nilai_fitur_all_path, index=False, float_format=None)
+    nilai_fitur_all_path = os.path.join(output_csv_dir, 'nilai-fitur-all-component.xlsx')
+    df_fitur_all.to_excel(nilai_fitur_all_path, index=False, float_format=None)
 
     # --- Setup bagian 4qmv Dataset ---
     # Initialisasi dataframe dengan pandas
     df_quadran = pd.DataFrame(frames_data_quadran)
     # Simpan ke file CSV
     nilai_4qmv_path = os.path.join(output_csv_dir, '4qmv-all-component.csv')
+    df_quadran.to_csv(nilai_4qmv_path, index=False, float_format=None)
+    nilai_4qmv_path = os.path.join(output_csv_dir, '4qmv-all-component.xlsx')
     df_quadran.to_csv(nilai_4qmv_path, index=False, float_format=None)
     
     # Base path model joblib

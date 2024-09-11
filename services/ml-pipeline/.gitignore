@@ -4,6 +4,7 @@ dataset/component_to_images/
 dataset/sub01/
 dataset/sub02/
 dataset/casme/
+dataset/casme_dua_terbaru/
 dataset/casme_custom/
 dataset/casme_custom_from_one/
 dataset/Demo/
@@ -15,3 +16,4 @@ output.csv
 output.xlsx
 output*
 test-output/
+model-backup/
