@@ -295,9 +295,9 @@ def store():
         "random_sampling": {
             "fitur_all_component": {
                 "data": df_fitur_all,
-                "model_path": os.path.join(base_model_path, 'svm_model_random_sampling.joblib'),
+                "model_path": os.path.join(base_model_path, 'vps', 'svm_model_random_sampling.joblib'),
                 "except_feature_columns": except_feature_columns,
-                "label_encoder_path": os.path.join(base_model_path, 'label_encoder_random_sampling.joblib')
+                "label_encoder_path": os.path.join(base_model_path, 'vps','label_encoder_random_sampling.joblib')
             },
             "4qmv_all_component": {
                 "data": df_quadran,
