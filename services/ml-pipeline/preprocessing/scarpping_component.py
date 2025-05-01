@@ -87,12 +87,12 @@ def extract_component_by_images(
     width_object = min(objectDimension["width"], image.shape[1] - x_left)
     height_object = min(objectDimension["height"], image.shape[0] - y_highest)
 
-    print(f"width_object: {width_object}, height_object: {height_object}")
+    # print(f"width_object: {width_object}, height_object: {height_object}")
 
     # Print coordinates and image size
-    print(f"x_left: {x_left}, x_right: {x_left + width_object}")
-    print(f"y_top: {y_highest}, y_bottom: {y_highest + height_object}")
-    print(f"Image size: {image.shape[1]} x {image.shape[0]}")
+    # print(f"x_left: {x_left}, x_right: {x_left + width_object}")
+    # print(f"y_top: {y_highest}, y_bottom: {y_highest + height_object}")
+    # print(f"Image size: {image.shape[1]} x {image.shape[0]}")
 
 
     block_data = np.array(extract_component_as_image(

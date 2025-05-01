@@ -72,11 +72,12 @@ def extract_component_as_image(
         selected_component_image, cv2.COLOR_BGR2GRAY
     )
 
-    # Save the annotated image
-    cv2.imwrite(
-        os.path.join(file_dir, f"annotated_frame-{frameNumber:02}.jpg"),
-        selected_component_image_gray,
-    )
+    # Dimatikan untuk mempercepat proses running 
+    # # Save the annotated image
+    # cv2.imwrite(
+    #     os.path.join(file_dir, f"annotated_frame-{frameNumber:02}.jpg"),
+    #     selected_component_image_gray,
+    # )
 
     # Get pixel values for blocks
     # blocks_data = split_into_blocks(selected_component_image_gray, file_dir, frameNumber, block_size)
